@@ -1,58 +1,110 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Manajemen Buku (Laravel + Breeze + Spatie Permission)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi manajemen buku dengan autentikasi (Laravel Breeze) dan otorisasi berbasis
+role dan permission (Spatie Laravel Permission). Tugas Mandiri: Laravel Breeze & Spatie Permission.
 
-## About Laravel
+**Nama:** Ahmad Faizal Bahri | **NIM:** 2495114009 | **Kelas:** Teknik Informatika 5A
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Teknologi
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Laravel 13
+- Laravel Breeze (stack Blade, dark mode, Pest)
+- spatie/laravel-permission
+- MySQL dan Tailwind CSS (bawaan Breeze)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Fitur
 
-## Learning Laravel
+- Register, login, logout, dan dashboard (Laravel Breeze)
+- CRUD buku: judul, penulis, penerbit, tahun terbit
+- Tiga role: Admin, Dosen, Mahasiswa
+- Kelola role pengguna (khusus Admin)
+- Tombol di tampilan disembunyikan sesuai hak akses, dan pemeriksaan hak akses dilakukan di sisi server
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Cara Instalasi
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. Clone repositori
+   ```bash
+   git clone https://github.com/faisallzz/book_management.git
+   cd book_management
+   ```
+2. Pasang dependensi
+   ```bash
+   composer install
+   npm install
+   ```
+3. Siapkan environment
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+   Buat database kosong bernama `book_management`, lalu sesuaikan nilai `DB_*` di file `.env`
+   (host, port, username, password).
+4. Migrasi dan isi data awal (role, permission, akun uji, contoh buku)
+   ```bash
+   php artisan migrate --seed
+   ```
+5. Jalankan aplikasi (gunakan dua terminal)
+   ```bash
+   npm run dev
+   php artisan serve
+   ```
+   Buka http://127.0.0.1:8000
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Catatan: untuk produksi atau tanpa `npm run dev`, jalankan `npm run build` satu kali.
 
-## Agentic Development
+## Akun Uji
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@test.com | password |
+| Dosen | dosen@test.com | password |
+| Mahasiswa | mahasiswa@test.com | password |
 
-```bash
-composer require laravel/boost --dev
+Pengguna yang mendaftar sendiri otomatis mendapat role **Mahasiswa**.
 
-php artisan boost:install
-```
+## Matriks Hak Akses
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+| Fitur | Admin | Dosen | Mahasiswa |
+|---|:---:|:---:|:---:|
+| Login / logout | Ya | Ya | Ya |
+| Lihat daftar buku | Ya | Ya | Ya |
+| Tambah buku | Ya | Ya | Tidak |
+| Edit buku | Ya | Ya | Tidak |
+| Hapus buku | Ya | Tidak | Tidak |
+| Kelola role pengguna | Ya | Tidak | Tidak |
 
-## Contributing
+Permission yang dipakai: `lihat buku`, `tambah buku`, `edit buku`, `hapus buku`, `kelola role`.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Cara Kerja Proteksi
 
-## Code of Conduct
+- Route dilindungi middleware `auth`: pengguna yang belum login diarahkan ke `/login`.
+- Setiap route buku dan kelola role dilindungi middleware `permission:<nama permission>`:
+  pengguna yang tidak memiliki izin menerima **HTTP 403 Forbidden**.
+- Tombol di tampilan disembunyikan dengan `@can`, tetapi itu hanya untuk kenyamanan tampilan.
+  Pengamanan sebenarnya ada di route (sisi server), sehingga akses lewat URL langsung atau
+  request manual tetap ditolak.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Hasil Pengujian
 
-## Security Vulnerabilities
+| # | Skenario | Hasil yang diharapkan | Status |
+|---|---|---|---|
+| 1 | Membuka `/books` dan `/dashboard` tanpa login | Diarahkan ke `/login` | Sesuai |
+| 2 | Login dengan password salah | Gagal, muncul pesan error | Sesuai |
+| 3 | Login dengan kredensial valid | Masuk ke dashboard | Sesuai |
+| 4 | Admin menghapus buku | Berhasil | Sesuai |
+| 5 | Dosen menambah dan mengedit buku | Berhasil | Sesuai |
+| 6 | Mahasiswa membuka `/books/create` dan `/books/{id}/edit` lewat URL | 403 | Sesuai |
+| 7 | Mahasiswa melihat daftar buku | Tampil tanpa tombol aksi | Sesuai |
+| 8 | Logout lalu membuka `/books` | Diarahkan ke login | Sesuai |
+| 9 | Dosen dan Mahasiswa mengirim request DELETE manual | 403, data tetap ada | Sesuai |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Struktur Penting
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- `routes/web.php`: route dan middleware permission
+- `bootstrap/app.php`: alias middleware Spatie
+- `app/Http/Controllers/BookController.php`: CRUD buku
+- `app/Http/Controllers/UserRoleController.php`: kelola role
+- `app/Models/Book.php`, `app/Models/User.php` (trait `HasRoles`)
+- `database/seeders/RolePermissionSeeder.php`: role, permission, dan akun uji
+- `database/seeders/BookSeeder.php`: contoh data buku
+- `resources/views/books/` dan `resources/views/users/`: tampilan
